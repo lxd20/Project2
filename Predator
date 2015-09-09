@@ -1,0 +1,420 @@
+import java.util.Collections;
+import java.util.Random;
+import java.util.regex.PatternSyntaxException;
+
+
+public class Predator extends Species{
+
+	
+	
+	boolean goTo = false; int goToX; int goToY;
+	int HomeX; int HomeY;
+	int HuntingX; int HuntingY;
+	
+	public final int  matingSeasonMax=90;
+	public final int  huntingSeasonMax=90;
+	boolean huntingSeason=true;  //hunting Season max= 50?
+	int matingSeason=0;
+	int mateChange = 10;
+	static int mateProbMax;
+	
+	
+	
+	public Predator(Map map1, Game game1,int PosX1, int PosY1, String[] mutation1, double d, int HuntingX1, int HuntingY1) {
+		super(map1, game1, PosX1,  PosY1,  d);
+		mutationArray=mutation1;
+		vision =7;
+		mateProb=350; 		
+		
+		if(game.visual==null)
+		{
+			Predator.mateProbMax =350;
+		}
+		else
+		{
+			Predator.mateProbMax=game.visual.predSlider.getValue();
+		}
+	
+		
+		hungerDamage= 0;
+		deathProb=5;
+		oldAge=510;
+		
+		
+		
+		if(PosX1<170)
+		{
+		HomeX= Game.randInt(120, 169);
+		HuntingX = Game.randInt(120, 169);
+		}
+		else if (PosX1>169 & PosX1<220)
+		{
+		HomeX=Game.randInt(170, 219);
+		HuntingX = Game.randInt(170, 219);
+		}
+	
+		else if (PosX1>219 & PosX1<270)
+		{
+		HomeX=Game.randInt(220, 269);
+		HuntingX = Game.randInt(220, 269);
+		}
+		else 
+		{
+		HomeX=Game.randInt(270, 319);
+		HuntingX = Game.randInt(270, 319);
+		}
+	
+		if(PosY1<150)
+		{
+			HomeY= Game.randInt(120, 149);
+			HuntingY= Game.randInt(150, 165);
+		}
+		else
+		{
+			HomeY= Game.randInt(210, 239);
+			HuntingY= Game.randInt(194, 209);
+		}
+		
+		
+		hungry=93; //amount of hungerMax
+		adult=53;
+		recovery=.35;
+		maxPop= 200;
+		
+		
+		
+	
+		
+	}
+	
+	public void speciesAct()
+	{
+	//	System.out.print(" S: 37 ");
+		if(goTo)
+		{
+		//	System.out.print("/40: " +goToX + " " + goToY+ " ");
+			if(food!=null && mate==null)
+			{
+				goToX=food.PosX;
+				goToY=food.PosY;
+			}
+			goTo(goToX,goToY);	//implement check location method with goToX and goToY variables
+		}
+		if (goTo ==false && mate==null && food==null)
+		{
+	//		System.out.print("47 ");
+
+			scanEnviroment();
+			long seed = System.nanoTime();
+			long seed2 = System.nanoTime();
+			long seed3 = System.nanoTime();
+
+			Collections.shuffle(red, new Random(seed));
+			Collections.shuffle(blue, new Random(seed2));
+			Collections.shuffle(green, new Random(seed3));
+			randomDir();
+		}
+		if(age>adult)
+		{
+		if (hunger<=hungry-48 &&  food==null && deathProb<30)
+		{
+//			System.out.print("62 ");
+
+			if(hunger==0)
+			{
+		//		System.out.print("66 ");
+
+				goTo =true;
+				goToX=HomeX;
+				goToY=HomeY;
+				//goto the home location
+			}
+	
+			if (goTo==false && mate==null)
+			{
+	//			System.out.print("81 ");
+				scanRed();
+			}
+			
+			if(deathProb>2 && age<oldAge)
+			{
+				deathProb= (int) (deathProb*(1-recovery));
+			}
+		}
+		
+		if (hunger>hungry-48 && mate==null)
+			
+		{
+	//		System.out.print("98 ");
+
+			if(huntingSeason)
+			{
+			//	System.out.print("102 ");
+				
+					goTo =true;
+					goToX=HuntingX;
+					goToY=HuntingY;		
+					huntingSeason=false;
+			}
+			
+			if (goTo==false)
+			{
+	//			System.out.print("117 ");
+				scanBlue();
+			}
+			
+		}
+		
+		}
+		
+		if (mateProb<Predator.mateProbMax)
+		{
+			mateProb+=mateChange;
+		}
+		if (mateProb>Predator.mateProbMax)
+		{
+			mateProb=mateProbMax;
+		}
+
+		
+		age++;
+		
+		hunger++;
+		
+		calculateDeath();
+		
+	}
+	
+	
+	
+	public void goTo(int x, int y)
+	{
+	
+		if(PosX!=x)
+			
+		{
+		
+			if (Math.abs(PosX-x)<(map.ArrayWidth-Math.abs(PosX-x)))
+			{
+				if (PosX<x){
+					setDirX(1);
+					
+				}
+				else if (PosX>x) {
+					setDirX(-1);
+				}
+			}
+			else
+			{
+				if(PosX<x)
+				{
+					setDirX(-1);
+				}
+				else if (PosX>x)
+				{
+					setDirX(1);
+				}
+			}
+		}
+		else
+		{
+			setDirX(0);
+		}
+		
+		
+		
+		if(PosY!=y)
+			{
+			if (Math.abs(PosY-y)<(map.ArrayHeight-Math.abs(PosY-y)))
+			{
+				if (PosY<y){
+					setDirY(1);
+				}
+				else if (PosY>y) {
+					setDirY(-1);
+				}
+			}
+			else
+			{
+				if(PosY<y)
+				{
+					setDirY(-1);
+				}
+				else if (PosY>y)
+				{
+					setDirY(1);
+				}
+			}
+			
+			
+		}
+		else
+		{
+			setDirY(0);
+		}
+
+		if(PosX==x && PosY==y)
+		{
+			if(goToX==HuntingX &&goToY==HuntingY)
+			{
+				hungerDamage=.710;
+			}
+				
+//			System.out.println("209");
+			goTo=false;
+			goToX =0;
+			goToY =0;
+			
+			if (mate!=null && food ==null && gender=="male") {
+				mate();
+			}
+			
+			else if (mate== null && food!=null)
+			{
+
+				eat();
+			}
+		}
+		
+	}
+	
+	public void mate()
+	{
+		
+		for(int i =0; i<2; i++)
+		{
+			Species s;
+			
+				s = new Predator(map, game,PosX,PosY, mutationArray, (mate.generation+generation)/2.0+1.0, Game.randInt(30, 80), Game.randInt(53, 78));
+			
+			map.newSpecies.add(s);
+		}
+		 mateProb=0;
+		 mate.mateProb=0;
+		 nullifyMate();
+	}	
+	
+	public void eat()
+	{
+//		System.out.print("246// ");
+		
+	
+		if (food.speed ==true)
+		{
+			Prey.deathDominant++;
+		}
+		else
+		{
+			Prey.deathRecessive++;
+		}
+		
+		map.deadSpecies.add(food);
+		if(food.mate!=null)
+		{
+			food.mate.mate=null;
+			food.mate=null;		
+		}
+		if(food.plant!=null)
+		{
+			food.plant.grabbed=false;
+			food.plant=null;
+		}
+		nullifyFood();
+		hunger=0;
+		huntingSeason=true;
+	
+		hungerDamage=0;
+			
+	}
+	public void scanBlue()
+	{
+		for (Prey s: blue)
+		{
+			
+			if (s.grabbed==false && food==null)
+			{
+
+				goTo=true;
+				goToX=s.PosX;
+				goToY=s.PosY;
+				food = s;
+				s.grabbed=true; 
+		//		System.out.print("268 " +"//");
+			}
+			else {
+				break;
+			}
+		}
+		
+	}
+	
+	public void scanRed()
+	{
+//		System.out.println(280);
+		for (Predator s: red)
+		{
+			if(mate==null)
+			{
+				
+				if (s.gender=="female" && gender=="male" &&s.mate==null)
+				{
+//					System.out.println("286");
+						mateCall(s);
+				}
+			}
+			else 
+			{
+				break;
+			}
+		}
+	}
+	
+	public void mateCall(Predator s)
+	{
+		
+	//	System.out.print("301");
+		int x  = Game.randInt(0, 1000);
+		int y  = Game.randInt(0, 1000);
+		
+		if (x<=mateProb && s.mate==null && y<=s.mateProb)
+			
+		{
+			mate = s;
+			s.mate = this; 
+			if(food!=null)
+			{
+				food.grabbed=false;
+
+				food= null;
+			}
+			if(mate.food!=null)
+			{
+				mate.food.grabbed=false;
+
+				mate.food=null;
+			}	
+			goTo=true;
+			goToX=mate.PosX;
+			goToY=mate.PosY;
+			mate.setDirX(0);
+			mate.setDirY(0);
+		}
+		
+	}
+	
+	public void nullifyFood()
+	{
+		
+		food.grabbed=false;
+		food=null;
+	}
+	public String toString()
+	{
+		return "R";
+	}
+
+}
+
+/*boolean Chase; 
+boolean Mob;
+boolean Stealth;*/
