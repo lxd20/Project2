@@ -1,0 +1,93 @@
+import java.util.ArrayList;
+
+//each grid is 5 by 5 pixels 
+public class Map {
+	public int ArrayWidth = 1000;
+	public int ArrayHeight =1000;
+	public int Depth = 20;
+	public ArrayList<Species>[][] enviroment = new ArrayList[ArrayWidth][ArrayHeight];
+	public ArrayList<Predator> red = new ArrayList<Predator>(50);
+	public ArrayList<Plant> green = new ArrayList<Plant>(300);
+	public ArrayList<Prey> blue = new ArrayList<Prey>(120);
+	public ArrayList<Species> newSpecies  = new ArrayList<Species>(50);
+	public ArrayList<Species> deadSpecies = new ArrayList<Species>(50);
+	//public ArrayList<Plant> newPlant = new ArrayList<Plant>(20); //added plants from mouseclick
+	Game game;
+	public Map(Game game1)
+	{
+		game = game1;
+		resetMap();
+		
+	}
+	
+	public int getPopulationPrey()
+	{
+		return blue.size();
+	}
+	public void addSpecies(Species species)
+	{
+		if (species instanceof Plant )
+		{
+			green.add((Plant)species);
+		}
+		else if (species instanceof Predator )
+		{
+			red.add((Predator)species);		}
+		else if (species instanceof Prey)
+		{
+			blue.add((Prey)species);
+			
+		}
+		enviroment[Game.mod(species.PosX, ArrayWidth)][Game.mod(species.PosY, ArrayHeight)].add(species);
+	}
+	
+	public void removeSpecies(Species species)
+	{
+		if (species instanceof Plant )
+		{
+			green.remove((Plant)species);
+		}
+		else if (species instanceof Predator )
+		{
+			red.remove((Predator)species);		}
+		else if (species instanceof Prey)
+		{
+			blue.remove((Prey)species);
+			
+		}
+		enviroment[Game.mod(species.PosX, ArrayWidth)][Game.mod(species.PosY, ArrayHeight)].remove(species);
+	}
+	
+	
+	//places species from array
+	public void placeSpecies()
+	{
+		for (Predator r:red)
+		{
+			enviroment[Game.mod(r.PosX, ArrayWidth)][Game.mod(r.PosY, ArrayHeight)].add(r);
+		}
+		
+		for (Prey b:blue)
+		{
+			enviroment[Game.mod(b.PosX, ArrayWidth)][Game.mod(b.PosY, ArrayHeight)].add(b);
+		}
+		
+		for (Plant g:green)
+		{
+			enviroment[Game.mod(g.PosX, ArrayWidth)][Game.mod(g.PosY, ArrayHeight)].add(g);
+
+		}
+	}
+	
+	public void resetMap()
+	{
+		for (int i = 0; i <ArrayWidth; i++ )
+		{
+			for (int j = 0; j<ArrayHeight; j++ )
+			{
+				enviroment[i][j] = new ArrayList<Species>(10);
+			}
+		}
+	}
+	
+}
