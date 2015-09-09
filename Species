@@ -1,0 +1,361 @@
+import java.util.ArrayList;
+
+
+public class Species {
+	Map map;
+	Game game;
+	int PosX;
+	int PosY;
+	int DirX;//0, 1, -1 
+	int DirY;
+	int PreDirX;
+	int PreDirY;
+	double generation; 
+	int age; 
+	int vision;
+	int hunger; 
+	int mateProb; //probably is measured out of 1000
+	int deathProb;
+	int  oldAge;
+	int adult;
+	int maxPop; //maximum population
+	int hungry; //when animal is hungry hunger>=hungry
+	double recovery; //percentage recovery from deathprob
+	double hungerDamage; // damage to health, less than 1 
+	int mateChange; // changes mateProb
+	String[] mutationArray;
+	String gender; 
+	Species mate = null;
+	Plant plant = null;
+	Prey food =null; //food for the predator
+	boolean grabbed = false;
+
+	public ArrayList<Predator> red = new ArrayList<Predator>(50);
+	public ArrayList<Plant> green = new ArrayList<Plant>(300);
+	public ArrayList<Prey> blue = new ArrayList<Prey>(120);
+	
+	public Species(Map map1, Game game1, int PosX1, int PosY1, double generation1)
+	{
+		map = map1; 
+		game = game1;
+		PosX=PosX1;
+		PosY=PosY1;
+		
+		if(this instanceof Prey || this instanceof Predator)
+		{
+			generation = generation1;
+			DirX = Game.randInt(-1, 1);
+			DirY = Game.randInt(-1, 1);
+			PreDirX = 0 ;
+			PreDirY = 0 ; 
+			age = 0;
+			
+			hunger = 0;
+			int genderNum = Game.randInt(0, 1);
+			if (genderNum ==0)
+			{
+				gender  = "male";
+			}
+			else 
+			{
+				gender = "female";
+			}
+		}
+	}
+	
+	public void speciesAct()
+	{
+	//	System.out.println(map.blue.indexOf(this)+ ": " + "(" + PosX + ", " + PosY+ ")");
+		
+		
+			
+		}
+	
+	//step direction to goTo location
+	public void goTo(int x, int y)
+	{
+		//System.out.println("myloc                      "+PosX +"     "+ PosY );
+		//System.out.println("booty                      "+x +"     "+ y );
+
+		//determine whether the two points are closer to the edge map
+		if(PosX!=x)
+		{
+		
+			if (Math.abs(PosX-x)<(map.ArrayWidth-Math.abs(PosX-x)))
+			{
+				if (PosX<x){
+					setDirX(1);
+					
+				}
+				else if (PosX>x) {
+					setDirX(-1);
+				}
+			}
+			else
+			{
+				if(PosX<x)
+				{
+					setDirX(-1);
+				}
+				else if (PosX>x)
+				{
+					setDirX(1);
+				}
+			}
+		}
+		
+		if(PosY!=y)
+			{
+			if (Math.abs(PosY-y)<(map.ArrayHeight-Math.abs(PosY-y)))
+			{
+				if (PosY<y){
+					setDirY(1);
+				}
+				else if (PosY>y) {
+					setDirY(-1);
+				}
+			}
+			else
+			{
+				if(PosY<y)
+				{
+					setDirY(-1);
+				}
+				else if (PosY>y)
+				{
+					setDirY(1);
+				}
+			}
+			
+		//	System.out.println("dirx: " + DirX + "diry: "+ DirY);
+			
+		}
+		
+	}
+	
+	public void calculateDeath()
+	{
+		/*if(this instanceof Predator)
+		{
+			System.out.print(deathProb+"/");
+
+		}*/
+		int x = Game.randInt(0, 1000);
+		if(x<deathProb)
+		{
+	
+			map.deadSpecies.add(this);
+			if(mate!=null)
+			{
+				nullifyMate();
+			}
+			
+			if(plant!=null)
+			{
+				nullifyPlant();
+			}
+			if (food!=null && food.predator!=null)
+			{
+				food.predator=null;
+			//	System.out.println("//" + food.predator + " " + food.mate + "  " +food.plant + "  "  + food.tired);
+				
+				
+		//		System.out.println("160");
+			}
+		}
+		if (age>=oldAge)
+		{
+			deathProb= 100+deathProb+ (int) ((1000-deathProb)*map.getPopulationPrey()/(double)maxPop);
+		}
+		
+		if (hunger>hungry)
+		{
+		//	System.out.print("HUNGRY!!!!!!!!!!!!!");
+			deathProb=deathProb + (int) ((1000-deathProb)*hungerDamage);
+		}
+		
+		
+	}
+	public void Move()
+	{
+		PosX = Game.mod(PosX+DirX, map.ArrayWidth);
+		PosY = Game.mod(PosY+DirY, map.ArrayHeight);
+		//System.out.println("age: " + age + " xPos: " +PosX +" ypos: " + PosY);
+	}
+	
+
+	
+	public void randomDir()
+	{
+
+		DirX = Game.randInt(-1, 1);
+		DirY = Game.randInt(-1, 1);
+	}
+	
+	public void setDirX(int x)
+	{
+		DirX = x;
+	}
+	
+	public void setDirY(int y)
+	{
+		DirY = y;
+	}
+	
+	public void eat()
+	{
+		return;
+	}
+	
+	
+	
+	public void mate()
+	{
+		if(PosX==mate.PosX) 
+		{
+			setDirX(0);
+		}
+		
+		if(PosY==mate.PosY)
+		{
+			setDirY(0);
+		}
+		
+		if(PosY==mate.PosY && PosX==mate.PosX)
+		{
+			if(this instanceof Prey)
+			{
+			for(int i =0; i<2; i++)
+			{
+				
+				int x = Game.randInt(0, 1);
+				int y = Game.randInt(0, 1);
+				String[] array = new String[]{mutationArray[x],mate.mutationArray[y]};
+			
+				Species s = new Prey(map, game,PosX,PosY, array, (mate.generation+generation)/2.0+1.0);
+							
+				map.newSpecies.add(s);
+			}
+			}
+			
+			
+			
+			if(this instanceof Predator) {
+				Species s = new Predator(map, game,PosX,PosY, mutationArray, (mate.generation+generation)/2.0+1.0,((Predator)this).HuntingX, ((Predator)this).HuntingY);
+				
+				map.newSpecies.add(s);
+			}
+			((Prey)this).numChildren +=2; 
+			((Prey)mate).numChildren +=2;
+			mateProb=0;
+			mate.mateProb=0;
+			nullifyMate();
+		}	
+		
+	}
+	
+	public void nullifyMate()
+	{
+		mate.mate=null;
+		mate= null;
+	}
+	
+	
+	public void nullifyPlant()
+	{
+		plant.grabbed=false;
+		plant = null;
+	}
+	
+	public void nullifyFood()
+	{
+		food.grabbed=false;
+		food=null;
+	}
+	public void mateCall(Species s)
+	{
+		//System.out.print("255");
+
+		int x  = Game.randInt(0, 1000);
+		int y  = Game.randInt(0, 1000);
+		
+		if (x<=mateProb && s.mate==null && y<=s.mateProb)
+			
+		{
+			mate = s;
+			s.mate = this; 
+			if(plant!=null)
+			{
+				plant.grabbed=false;
+
+				plant= null;
+			}
+			if(mate.plant!=null)
+			{
+				mate.plant.grabbed=false;
+
+				mate.plant=null;
+			}
+		}
+		
+		if (mate!=null)
+		{
+		goTo(mate.PosX,mate.PosY);
+//		System.out.println(mate);
+		mate.setDirX(0);
+		mate.setDirY(0);
+		}
+	}
+	
+	//returns arraylist of nearby species
+	public void scanEnviroment()
+	{ 
+		red.clear();
+		blue.clear();
+		green.clear();
+
+		for (int x= PosX-vision+1; x<PosX+vision; x++)
+		{
+	
+			for (int y=PosY-vision+1; y<PosY+vision; y++)
+			{
+				
+					if(!map.enviroment[Game.mod(x,map.ArrayWidth)][Game.mod(y,map.ArrayHeight)].isEmpty())
+					{
+						for(Species s: map.enviroment[Game.mod(x,map.ArrayWidth)][Game.mod(y,map.ArrayHeight)])
+						{
+							if (s!=this)
+							{
+
+								addSpecies(s);
+							}
+						}
+				}
+			}
+		}
+		
+	}
+	
+	public void addSpecies(Species species)
+	{
+		if (species instanceof Plant )
+		{
+			green.add((Plant)species);
+		}
+		else if (species instanceof Predator )
+		{
+			red.add((Predator)species);		}
+		else if (species instanceof Prey)
+		{
+			blue.add((Prey)species);
+			
+		}
+		
+	}
+	
+	public double distanceBetween(Species species)
+	{
+		return Math.sqrt(Math.pow(PosX-species.PosX,2)+Math.pow(PosY-species.PosY, 2)); 
+	}
+	
+}
