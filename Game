@@ -1,0 +1,550 @@
+import java.io.IOException;
+import java.util.Random;
+
+import javax.swing.UIManager;
+import javax.swing.UIManager.*;
+
+
+//1152 by 720 screen? 4 by 4 for each array
+public class Game {
+
+	Map map ;
+	static int month; 
+	public static int plantSpawnRate = 54; 
+	Visual visual;
+	static double percentage; //percent mutated allele 
+	static double deathRatioD; //death by predator over birth
+	static double deathRatioR;	//death prey
+	static double dd=0; //amount homozygous dominant
+	static double ddp=0; //proportion of population
+
+	static double dr=0; //amount heterozygous
+	static double drp=0; //proportion of population
+
+
+	static double rr=0; //amount homozygous recessive
+	static double rrp=0; //proportion of population
+
+	static double hw = 0; //hardy-weinberg value
+	
+	
+	
+	static double averageChildrenD= 0; //average number of children
+	static double averageChildrenR= 0; 
+	
+	
+	static double survivalRateD = 0; // average survival percentage to adult
+	static double survivalRateR = 0; 
+	
+	static double fitnessD = 0; //fitness 
+	static double fitnessR = 0; 
+	
+	public Game()
+	{
+		map = new Map(this);
+		initialize();
+	}
+	
+	
+	public void initialize()
+	{
+		/*Plant plant = new Plant(map, this, 63, 61);
+		Plant plant2 = new Plant(map, this, 56, 55);
+		map.addSpecies(plant);
+		map.addSpecies(plant2);*/
+		
+		Prey.canMutate=true;
+		
+		
+		for (int i = 0; i <145; i++)
+		{
+			int x = Game.randInt(120, 319);
+			int y = Game.randInt(120, 149);
+			int x1= Game.randInt(x-25, x+25);   //doesn't Initialize to this position
+			int y1= Game.randInt(150, 179);		//doesn't Initialize to this position
+			Predator predator = new Predator(map,this,x,y,null,1,x1,y1);
+			predator.age=Game.randInt(10, 400);
+			predator.hunger=Game.randInt(0, 50);
+			map.addSpecies(predator);
+			
+		}
+		
+		for (int i = 0; i <145; i++)
+		{
+			int x = Game.randInt(120, 319);
+			int y = Game.randInt(210, 239);
+			int x1= Game.randInt(x-25, x+25);   //doesn't Initialize to this position
+			int y1= Game.randInt(150, 179);		//doesn't Initialize to this position
+			Predator predator = new Predator(map,this,x,y,null,1,x1,y1);
+			predator.age=Game.randInt(10, 400);
+			predator.hunger=Game.randInt(0, 50);
+			map.addSpecies(predator);
+			
+		}
+		
+		
+	/*	
+		Predator predator1 = new Predator(map,this,41,42,null,1,68,68);
+		map.addSpecies(predator1);
+		
+		predator1.gender="female";
+		
+		Predator predator2 = new Predator(map,this,43,48,null,1,68,68);
+		map.addSpecies(predator2);
+		predator2.gender="male";
+		*/
+		
+	
+		for (int i = 0; i<360; i++)   // full size 400
+		{
+			int x = Game.randInt(120, 319);
+			int y = Game.randInt(150, 209);
+			Prey prey = new Prey(map,this, x,y,new String[]{"R","R"},1);
+			map.addSpecies(prey);
+			prey.age=Game.randInt(10, 220);
+			
+			if (prey.age<prey.adult )
+			{
+				if (prey.speed==false)
+				{
+				Prey.amountBirthR++;
+				}
+				
+				else{
+				Prey.amountBirthD++;
+				}
+			}
+			
+			//prey.mutationArray[0]="D";
+		//	prey.mutationArray[1]="D";
+	/*		if (i%3==0)
+			{
+				prey.mutationArray[0]="D";
+				prey.speed=true;
+				
+				if(i%2==0)
+				{
+					prey.mutationArray[1]="D";
+				}
+			}*/
+		}
+		
+		/*Prey prey = new Prey(map, this, 180,160,new String[]{"D","D"},1);
+		prey.speed=true;
+		map.addSpecies(prey);*/
+
+		
+		
+		
+		
+		for (int i = 0; i <700; i++) // Originally 700
+		{
+			int x = Game.randInt(120, 319);
+			int y = Game.randInt(150, 209);
+			Plant plant = new Plant(map,this, x,y);
+			map.addSpecies(plant);
+			
+		}
+
+		
+	/*	Prey prey = new Prey(map,this, 60,57,null, 0);
+		prey.gender="male";*/
+		/*Prey prey2 = new Prey(map,this,61,61,null);
+		prey2.gender="male";
+		Prey prey3 = new Prey(map,this,57,60,null);
+		prey3.gender = "female";
+		Prey prey4 = new Prey(map,this,58,60,null);
+		prey4.gender = "female";*/
+/*		map.addSpecies(prey);
+*/		/*map.addSpecies(prey2);
+		map.addSpecies(prey3);
+		map.addSpecies(prey4);*/
+		
+		
+	  
+	}
+	public void plan() throws InterruptedException {
+		setPreDir();
+
+		for (Predator r: map.red)
+		{
+			r.speciesAct();
+		}
+		for (Prey b: map.blue)
+		{
+			b.speciesAct();
+		}
+
+	}
+	
+	public void addPlants(int amount, int xlow, int  xhigh, int ylow, int yhigh)
+	{
+		for (int i = 0; i <amount; i++)
+		{
+			int x = Game.randInt(xlow, xhigh);
+			int y = Game.randInt(ylow, yhigh);
+			Plant plant = new Plant(map,this, x,y);
+			map.addSpecies(plant);
+			
+		}
+		
+	}
+	
+	
+	public void addPrey(int amount, int xlow, int  xhigh, int ylow, int yhigh)
+	{
+		for (int i = 0; i <amount; i++)
+		{
+			int x = Game.randInt(xlow, xhigh);
+			int y = Game.randInt(ylow, yhigh);
+			Prey prey = new Prey(map,this, x,y,null,1);
+			map.addSpecies(prey);
+			
+		}
+		
+	}
+	
+	public void setPreDir()
+	{
+		for (Predator r: map.red)
+		{
+			r.PreDirX = r.DirX;
+		}
+		
+		for (Prey b: map.blue)
+		{
+			b.PreDirX = b.DirX;
+		}
+		
+		for (Predator r: map.red)
+		{
+			r.PreDirY = r.DirY;
+		}
+		
+		for (Prey b: map.blue)
+		{
+			b.PreDirY = b.DirY;
+		}
+	}
+	public void move()
+	{
+		
+		map.resetMap();
+		for (Predator r: map.red)
+		{
+			r.Move();
+		}
+		
+		
+		Prey.canMutate=true;
+		
+		Prey.mutationPop = 0;
+		dd=0;
+		rr=0;
+		dr=0;
+		
+		
+		for (Prey b: map.blue)
+		{
+			b.Move();
+			
+			if (b.speed==true)
+			{
+				if(b.mutationArray[0]=="D")
+				{
+					Prey.mutationPop++;
+				}
+				if(b.mutationArray[1]=="D")
+				{
+					Prey.mutationPop++;
+				}
+				
+				if(b.mutationArray[0]=="D" && b.mutationArray[1]=="D")
+				{
+					dd++;
+				}
+				else
+				{
+					dr++;
+				}
+				Prey.canMutate=false;
+			}
+			else{
+				rr++;
+			}
+			
+			
+		}
+		ddp = (double)Math.round(((double) dd/( map.blue.size())) * 1000) / 1000;
+		drp = (double)Math.round(((double) dr/( map.blue.size())) * 1000) / 1000;
+		rrp = (double)Math.round(((double) rr/( map.blue.size())) * 1000) / 1000;
+		hw =  (double)Math.round((((double)ddp*ddp+drp*2+rrp*rrp)) * 1000) / 1000;
+		
+		
+		
+		percentage =  (double) Prey.mutationPop /( map.blue.size()*2.0)*100;
+		
+		percentage = (double)Math.round(percentage * 10) / 10;
+		
+		
+		addNewSpecies();
+		removeDeadSpecies();
+		map.placeSpecies();
+		
+		map.newSpecies.clear();
+		map.deadSpecies.clear();
+		//use the set directions to move species 
+	}
+	
+	public void addNewSpecies()
+	{
+
+		for (Species s: map.newSpecies)
+		{
+			if(s instanceof Prey)
+			{
+				if(((Prey)s).speed)
+				{
+					Prey.birthDominant++;
+					Prey.amountBirthD++;
+				}
+				else
+				{
+					Prey.birthRecessive++;
+					Prey.amountBirthR++;
+				}
+			}
+			map.addSpecies(s);
+		}
+	}
+	
+	public void removeDeadSpecies()
+	{
+		for (Species s:map.deadSpecies)
+		{
+			if(s instanceof Prey)
+			{
+				
+				if(s.age>=s.adult){
+				
+					if (((Prey) s).speed)
+					{
+						Prey.mateRateD += ((Prey)s).numChildren;
+						Prey.adultDeathD++;
+					}
+					else
+					{
+						Prey.mateRateR += ((Prey)s).numChildren;
+						Prey.adultDeathR++;
+					}
+				}
+				else
+				{
+					if (((Prey) s).speed)
+					{
+						Prey.childDeathD++;
+					}
+					else
+					{
+						Prey.childDeathR++;
+					}
+				}
+			}
+			
+			map.removeSpecies(s);
+		}
+	}
+	
+	
+	public static int randInt(int min, int max) {
+
+	    Random rand = new Random();
+
+	    int randomNum = rand.nextInt((max - min) + 1) + min;
+
+	    return randomNum;
+	}
+	
+	public static int mod(int x, int n)
+	{
+		int r = x % n;
+		if (r < 0)
+		{
+		    r += n;
+		}
+		
+		return r;
+	}
+	
+	
+	
+	
+	public final static void clearConsole()
+	{
+	    try
+	    {
+	        final String os = System.getProperty("os.name");
+
+	        if (os.contains("Windows"))
+	        {
+	            Runtime.getRuntime().exec("cls");
+	        }
+	        else
+	        {
+	            Runtime.getRuntime().exec("clear");
+	        }
+	    }
+	    catch (final Exception e)
+	    {
+	        //  Handle any exceptions.
+	    }
+	}
+	
+	public double averageGeneration()
+	{
+		double  x =0;
+		for(Prey s: map.blue)
+		{
+			x+=s.generation;
+		}
+		return (x/map.blue.size());
+	}
+	public static void main(String[] args) throws IOException, InterruptedException 
+	{		
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+		    // If Nimbus is not available, you can set the GUI to another look and feel.
+		}
+		
+		
+		Game game = new Game();
+		game.visual = new Visual(game, game.map);
+/*		int[] red = new int[2999];
+		int[] blue = new int[2999];
+		int[] green = new int[2999];*/
+		
+		
+ 	/*	for(Species s: game.map.blue)
+		{
+			System.out.print(s.gender+" ");
+		}*/
+
+		while (month<99999)
+		{
+		Game.clearConsole();
+			//game.printMap(30, 80, 30, 80);
+		
+		
+		
+		
+			deathRatioD =  (double) Prey.deathDominant /( Prey.birthDominant)*100;
+			deathRatioD = (double)Math.round(deathRatioD * 10) / 10;
+			
+			deathRatioR =  (double) Prey.deathRecessive/( Prey.birthRecessive)*100;
+			deathRatioR = (double)Math.round(deathRatioR * 10) / 10;
+		
+	//		System.out.println("adultR: " + Prey.amountAdultR + "birthR " + Prey.amountBirthR);
+	//		System.out.println("Adult DeathD: "  + Prey.adultDeathD + " R: " + Prey.adultDeathR);
+			
+			
+			
+			
+			if(Prey.adultDeathD!=0){
+			Game.averageChildrenD = (double) Prey.mateRateD/Prey.adultDeathD;
+			}
+			
+			if(Prey.adultDeathR!=0){
+			Game.averageChildrenR = (double) Prey.mateRateR/Prey.adultDeathR;
+			}
+			
+			if(Prey.amountBirthD!=0){
+			
+			Game.survivalRateD = (double) Prey.amountAdultD/(Prey.amountAdultD + Prey.childDeathD); 
+			}
+			
+			Game.survivalRateR = (double)Prey.amountAdultR/(Prey.amountAdultR + Prey.childDeathR); 
+			
+			fitnessD = survivalRateD*averageChildrenD; 
+			fitnessR = survivalRateR*averageChildrenR; 
+			
+			if(fitnessR<fitnessD) {
+				fitnessR = fitnessR/fitnessD; 
+				fitnessD =1; 
+
+			}
+			
+			else
+			{
+				fitnessD = fitnessD/fitnessR; 
+				fitnessR=1; 
+			}
+			
+			
+			
+			game.visual.repaint();
+			
+			
+			
+			try {
+			    Thread.sleep(20);                 //1000 milliseconds is one second.
+			} catch(InterruptedException ex) {
+			    Thread.currentThread().interrupt();
+			}		
+			game.plan();
+			game.move();
+			
+		//	System.out.println(game.month/game.averageGeneration());
+			
+		
+			
+		/*	red[month] = game.map.red.size();
+			blue[month] = game.map.blue.size();
+			green[month] = game.map.green.size();
+		*/
+				month++;
+			
+			//	game.addPrey(2, 70, 78, 70, 78);
+
+			 game.addPlants(plantSpawnRate,120,319,150,209);
+			/* for (Plant p: game.map.newPlant)
+			 {
+				 game.map.addSpecies(p);
+			 }*/
+			}
+		
+		
+			
+/*
+		for(Species s: game.map.blue)
+		{
+			
+			System.out.print(s.gender+" ");
+		}*/
+		
+		/*for(int s: red)
+		{
+			System.out.println(s);
+
+		}
+		System.out.println("--------------------------");
+
+		for(int s: green)
+		{
+			System.out.println(s);
+		}
+		System.out.println("--------------------------");
+		for(int s: blue)
+		{
+			System.out.println(s);
+
+		}*/
+	}
+	
+	
+}
