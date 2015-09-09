@@ -1,0 +1,21 @@
+public class Plant extends Species{
+
+	
+	public Plant(Map map1, Game game1, int PosX1, int PosY1) {
+		super(map1, game1, PosX1, PosY1,0);
+		
+		maxPop= 100;  
+		// TODO Auto-generated constructor stub
+	}
+	
+	public String toString()
+	{
+		return "G";
+	}
+	 
+	public void speciesAct()
+	{
+		return;
+	}
+	
+}
