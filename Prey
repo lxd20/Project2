@@ -1,0 +1,339 @@
+import java.util.Collections;
+import java.util.Random;
+
+
+public class Prey extends Species {
+
+	
+	
+	static int deathRecessive=0;
+	static int deathDominant=0;
+	static int birthRecessive=0;
+	static int birthDominant=0;
+	static int mateProbMax;
+	boolean speed =false; 
+	static boolean canMutate;
+	static int mutationPop = 0; //number of alleles with mutation
+	
+	
+	//survivability index calculation
+	static int amountBirthD; // total number birth before adulthood
+	static int amountBirthR; 
+	static int amountAdultD; // total number reach adulthood
+	static int amountAdultR;
+	
+	
+	
+	static int mateRateD; // children total dominant
+	static int adultDeathD; //total died adultjust c
+	
+	
+	static int mateRateR; // children total recessive
+	static int adultDeathR; 
+	
+	static int childDeathD; // death before Adulthood
+	static int childDeathR; 
+	
+	
+	
+	Predator predator= null;
+	
+	int goToX;
+	int goToY;
+	int fleeSize = 24; //how far to flee from prey
+	int tired=0; //how tired the prey is from fleeing
+	int numChildren=0;
+	public Prey(Map map1, Game game1,int PosX1, int PosY1, String[] mutation1 , double generation1) {
+		super(map1, game1, PosX1,  PosY1,generation1);
+
+	
+		
+		
+		
+		
+		mutationArray=mutation1;
+		vision = 5;
+		mateProb=420;
+		if(game.visual==null)
+		{
+			Prey.mateProbMax =420;
+		}
+		else
+		{
+		Prey.mateProbMax=game.visual.preySlider.getValue();
+		}
+		deathProb= 1;
+		
+		oldAge= 246; 
+		adult =46;
+		maxPop=800;
+		hungerDamage= .20;
+		mateChange = 50;
+		hungry =22;
+		//speed determined by number of move iterations
+		//do if conditions for mutations in constructor
+		if(canMutate){
+			calculateMutation();
+		}		
+		
+		
+		if((mutationArray[1] =="D" || mutationArray[0]  == "D") && speed==false)
+		{
+			speed=true; 
+			canMutate=false;
+			
+		//	System.out.println("MUTATION---------------------");
+		}
+		
+		if(speed==true)
+		{
+			hungry = 24;
+			oldAge = 260;
+			adult = 43;
+			hungerDamage = .12;
+			mateChange = 80;
+			
+		}
+	
+
+	}
+
+	
+
+	public void speciesAct()
+	{
+		//should mate be null in predator
+		//System.out.println("Prex:  " + PreDirX + "   PreY: " + PreDirY);
+	//	System.out.println(predator + " " + mate + "  " +plant + "  "  + tired);
+
+		if (mate==null && plant==null && predator==null && tired==0)
+		{
+			//System.out.println("73");
+			scanEnviroment();
+			long seed = System.nanoTime();
+			long seed2 = System.nanoTime();
+			long seed3 = System.nanoTime();
+
+			Collections.shuffle(red, new Random(seed));
+			Collections.shuffle(blue, new Random(seed2));
+			Collections.shuffle(green, new Random(seed3));
+			setDirX(0);
+			setDirY(0);
+			randomDir();
+		}
+		
+		
+
+		if (mate==null && plant ==null && predator==null && age>=adult && hunger <=hungry && tired==0)
+		{
+			scanBlue();
+		}
+		
+		if (mate==null && plant ==null && predator==null && hunger>=4 && tired==0)
+		{
+
+			scanGreen();
+		}
+		
+		if (mate==null && plant==null && predator==null && speed==true && tired==0)
+		{
+			scanRed();
+		}
+		
+		
+		
+		if(plant!=null)
+		{
+			eat();
+		}
+		
+		if(mate!=null && gender=="male")
+		{
+		
+			mate();
+		}
+		
+		
+		if(predator!=null)
+		{
+			//System.out.print(predator.PosX);
+			//System.out.println("  120");
+			flee();
+		}
+		
+		
+		
+		
+		if (mateProb<Prey.mateProbMax)
+		{
+			mateProb+=mateChange;
+		}
+		if (mateProb>Prey.mateProbMax)
+		{
+			mateProb=mateProbMax;
+		}
+
+		if (tired>0)
+		{
+			tired--;
+		}
+		
+		if(age ==adult)
+		{
+			if(speed)
+			{
+				Prey.amountAdultD++;
+			}
+			else
+			{
+				Prey.amountAdultR++;
+			}
+		}
+		age++;
+		hunger++;
+		calculateDeath();
+		
+
+	
+	
+	}
+	
+	public void flee()
+	{
+		if(PosX==goToX) 
+		{
+			setDirX(0);
+		}
+		
+		if(PosY==goToY)
+		{
+			setDirY(0);
+		}
+		
+		if((PosX==goToX && PosY==goToY))
+		{
+			predator= null;
+			goToX=0;
+			goToY=0;
+			setDirX(0);
+			setDirY(0);
+			tired = 2; 
+		}	
+		
+	}
+	public void calculateMutation()
+	{
+		if(mutationArray[1] =="R" && mutationArray[0]  == "R")
+		{
+			
+			int x = Game.randInt(0, 1000);
+			if (x<1)
+			{
+				mutationArray[0] = "D";
+				speed=true; 
+			}	
+		}
+	}
+	
+	
+	
+	
+	public void eat()
+	{
+		
+		if(PosX==plant.PosX) 
+		{
+			setDirX(0);
+		}
+		
+		if(PosY==plant.PosY)
+		{
+			setDirY(0);
+		}
+		
+		if(PosY==plant.PosY && PosX==plant.PosX)
+		{
+			map.deadSpecies.add(plant);
+			plant= null;
+			hunger=0;
+			if(deathProb>100)
+			{
+				deathProb= deathProb-100;
+			}
+		}	
+		
+	
+	}
+	public void scanBlue()
+	{
+		for (Species s: blue)
+		{
+			if(mate==null)
+			{
+				
+				if (s.gender=="female" && gender=="male" &&s.mate==null)
+				{
+						mateCall(s);
+				}
+			}
+			else 
+			{
+				break;
+			}
+		}
+			
+	}
+	
+	public void scanGreen()
+	{
+		for (Species s: green)
+		{
+			if(plant==null)
+			{
+				if (s instanceof Plant && ((Plant) s).grabbed==false )
+				{
+					goTo(s.PosX,s.PosY);
+					plant = (Plant) s;
+					s.grabbed=true;
+				}
+			}
+			else {
+				break;
+			}
+		}
+	}
+	
+	public void scanRed()
+	{
+		for (Predator s: red)
+		{
+			 if(predator==null &&  s.food==this)
+			 {
+				 goTo(PosX+fleeSize*s.DirX,s.PosY+fleeSize*s.DirY);
+				 predator = s; 
+				 goToX = s.PosX+fleeSize*s.DirX;
+				 goToY = s.PosY+fleeSize*s.DirY;
+				 plant = null;
+				 mate  = null;
+			 }
+			 else{
+				 break;
+			 }
+		}
+		
+	}
+	public String toString()
+	{
+		return "B";
+	}
+}
+
+
+/*	boolean Speed;
+boolean Camouflage;
+boolean AlarmCall; 
+boolean FeignDeath;
+boolean Spray;
+boolean Social;
+boolean FarSight; 
+boolean grabbed=false;*/
